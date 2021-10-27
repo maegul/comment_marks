@@ -104,8 +104,8 @@ def get_config():
     EXTRACTION_SEP = r'|:!:|'
 
 
-def plugin_loaded():
-    get_config()
+# def plugin_loaded():
+#     get_config()
 
 
 # > Goto Comment Command
@@ -113,6 +113,7 @@ def plugin_loaded():
 class GotoCommentCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
+        get_config()
 
         self._current_cursor_loc = self.view.sel()[0]
         # print('goto comment')
