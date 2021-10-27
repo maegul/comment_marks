@@ -1,0 +1,6 @@
+[
+	{
+		"command": "goto_comment",
+		"keys": ["super+k","super+shift+r"],
+	}
+]

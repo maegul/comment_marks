@@ -1,0 +1,31 @@
+{
+    // If going to have custom settings for a particular scope,
+    // that scope must have a parameter in scope_comment_chars,
+    // as all other settings flow from the scopes identified here.
+    // This is because all regex patterns are prepared on package load.
+    "scope_comment_chars": {
+        "default": ["#", "/", "/*", "%", "<!--", "-"],
+        "source.python": ["#"],
+        "source.json.sublime.keymap": ["/"]
+    },
+
+    "custom_comment_start_patterns": {
+        "source.python": ["^[ \t]*#+"]
+    },
+
+    "default_level_char": ">",
+
+    // Custom level char for specific scopes
+    // scope must be configured in scope_comment_chars above first
+    "level_chars": {
+        "source.python": ">"
+    },
+
+    "level_char_format_sub": {
+        "1": "",
+        "2": "  - ",
+        "3": "   -- ",
+        "4": "    --",
+        "5": "     --"
+    }
+}
