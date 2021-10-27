@@ -7,97 +7,105 @@ import sublime_plugin
 
 # > Comment start
 
-# should come from default settings
-# SCOPE_COMMENT_CHARS = {
-#     'default': ['#', '/', '/*', '%', '<!--', '-'],
-#     'source.python': ['#'],
-#     'source.json.sublime.keymap': ['/']
-# }
-SETTINGS = sublime.load_settings('comment_marks.sublime-settings')
-# print(SETTINGS)
+def get_config():
+    "Extract settings and construct all relevant parameters and declar necessary global constants"
 
-SCOPE_COMMENT_CHARS = SETTINGS.get('scope_comment_chars')
+    # should come from default settings
+    # SCOPE_COMMENT_CHARS = {
+    #     'default': ['#', '/', '/*', '%', '<!--', '-'],
+    #     'source.python': ['#'],
+    #     'source.json.sublime.keymap': ['/']
+    # }
+    SETTINGS = sublime.load_settings('comment_marks.sublime-settings')
+    # print(SETTINGS)
 
-COMMENT_START_PATTERNS = {
-    scope: [
-        rf'^[ \t]*{re.escape(c)}+'
-        for c in chars
-        ]
-    for scope, chars
-    in SCOPE_COMMENT_CHARS.items()
-}
+    SCOPE_COMMENT_CHARS = SETTINGS.get('scope_comment_chars')
 
-# should come from user settings
-# CUSTOM_COMMENT_START_PATTERNS = {
-#     # insert comment char     V----- here
-#     # 'source.python': [r'^[ \t]*\#+', r'\#'],
-#     # 'source.json.sublime.keymap': [r'^[ \t]*\/+']
-# }
+    COMMENT_START_PATTERNS = {
+        scope: [
+            rf'^[ \t]*{re.escape(c)}+'
+            for c in chars
+            ]
+        for scope, chars
+        in SCOPE_COMMENT_CHARS.items()
+    }
 
-CUSTOM_COMMENT_START_PATTERNS = SETTINGS.get('custom_comment_start_patterns')
+    # should come from user settings
+    # CUSTOM_COMMENT_START_PATTERNS = {
+    #     # insert comment char     V----- here
+    #     # 'source.python': [r'^[ \t]*\#+', r'\#'],
+    #     # 'source.json.sublime.keymap': [r'^[ \t]*\/+']
+    # }
 
-# add custom to all
-COMMENT_START_PATTERNS.update(CUSTOM_COMMENT_START_PATTERNS)
+    CUSTOM_COMMENT_START_PATTERNS = SETTINGS.get('custom_comment_start_patterns')
 
-# > Compiling into complete patterns
-COMMENT_PATTERNS = {
-    scope: r'|'.join([p for p in patterns ])
-    for scope, patterns
-    in COMMENT_START_PATTERNS.items()
-}
+    # add custom to all
+    COMMENT_START_PATTERNS.update(CUSTOM_COMMENT_START_PATTERNS)
 
-# > Level Characters
+    # > Compiling into complete patterns
+    COMMENT_PATTERNS = {
+        scope: r'|'.join([p for p in patterns ])
+        for scope, patterns
+        in COMMENT_START_PATTERNS.items()
+    }
 
-# DEFAULT_LEVEL_CHAR = r'>'
-DEFAULT_LEVEL_CHAR = SETTINGS.get('default_level_char')
-# LEVEL_CHARS = {
-#     'source.python': r'>'
-# }
-LEVEL_CHARS = SETTINGS.get('level_chars')
+    # > Level Characters
 
-# Format for substitution of level_chars
-# LEVEL_CHAR_FORMAT_SUB = {
-#     1: '',
-#     2: '  - ',
-#     3: '   -- ',
-#     4: '    --',
-#     5: '     --'
-# }
-LEVEL_CHAR_FORMAT_SUB = SETTINGS.get('level_char_format_sub')
+    # DEFAULT_LEVEL_CHAR = r'>'
+    DEFAULT_LEVEL_CHAR = SETTINGS.get('default_level_char')
+    # LEVEL_CHARS = {
+    #     'source.python': r'>'
+    # }
+    LEVEL_CHARS = SETTINGS.get('level_chars')
 
-# replace str keys with integers
-LEVEL_CHAR_FORMAT_SUB = {
-    int(n): sub
-    for n, sub in LEVEL_CHAR_FORMAT_SUB.items()
-}
+    # Format for substitution of level_chars
+    # LEVEL_CHAR_FORMAT_SUB = {
+    #     1: '',
+    #     2: '  - ',
+    #     3: '   -- ',
+    #     4: '    --',
+    #     5: '     --'
+    # }
+    LEVEL_CHAR_FORMAT_SUB = SETTINGS.get('level_char_format_sub')
 
-LEVEL_CHAR_FORMAT_SUB_PATTERNS = {
-    scope: {
-        # default back to default lvl char, so long as comment_start_pattern is set
-        (n*LEVEL_CHARS.get(scope, DEFAULT_LEVEL_CHAR)): sub
+    # replace str keys with integers
+    LEVEL_CHAR_FORMAT_SUB = {
+        int(n): sub
         for n, sub in LEVEL_CHAR_FORMAT_SUB.items()
     }
-    for scope in COMMENT_START_PATTERNS
-}
 
-# > Full Patterns
+    global LEVEL_CHAR_FORMAT_SUB_PATTERNS
+    LEVEL_CHAR_FORMAT_SUB_PATTERNS = {
+        scope: {
+            # default back to default lvl char, so long as comment_start_pattern is set
+            (n*LEVEL_CHARS.get(scope, DEFAULT_LEVEL_CHAR)): sub
+            for n, sub in LEVEL_CHAR_FORMAT_SUB.items()
+        }
+        for scope in COMMENT_START_PATTERNS
+    }
 
-LEVEL_PATTERNS = {
-    scope: (
-        # parentheses around pattern important, breaks | off from rest of pattern
-        # ie, OR is not greedy
-        rf'({pattern})[ ]*({re.escape(LEVEL_CHARS.get(scope, DEFAULT_LEVEL_CHAR))}+)\s*(.+)'
-        )
-    for scope, pattern
-    in COMMENT_PATTERNS.items()
-}
+    # > Full Patterns
+    global LEVEL_PATTERNS
+    LEVEL_PATTERNS = {
+        scope: (
+            # parentheses around pattern important, breaks | off from rest of pattern
+            # ie, OR is not greedy
+            rf'({pattern})[ ]*({re.escape(LEVEL_CHARS.get(scope, DEFAULT_LEVEL_CHAR))}+)\s*(.+)'
+            )
+        for scope, pattern
+        in COMMENT_PATTERNS.items()
+    }
 
-print('Comment Marks -- Full Patterns Spec:')
-for scope, pattern in LEVEL_PATTERNS.items():
-    print(f'\t{scope}: {pattern}')
+    print('Comment Marks -- Full Patterns Spec:')
+    for scope, pattern in LEVEL_PATTERNS.items():
+        print(f'\t{scope}: {pattern}')
+
+    global EXTRACTION_SEP
+    EXTRACTION_SEP = r'|:!:|'
 
 
-EXTRACTION_SEP = r'|:!:|'
+def plugin_loaded():
+    get_config()
 
 
 # > Goto Comment Command
@@ -144,7 +152,7 @@ class GotoCommentCommand(sublime_plugin.TextCommand):
 
     def update_with_formatted_matches(self, sections):
 
-        if LEVEL_CHAR_FORMAT_SUB:  # if none, don't do this
+        if LEVEL_CHAR_FORMAT_SUB_PATTERNS:  # if none, don't do this
             scope = sections['scope']
             # should be available by this point,
             # as it means that scope is available in level_chars
