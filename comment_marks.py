@@ -10,14 +10,8 @@ import sublime_plugin
 def get_config():
     "Extract settings and construct all relevant parameters and declar necessary global constants"
 
-    # should come from default settings
-    # SCOPE_COMMENT_CHARS = {
-    #     'default': ['#', '/', '/*', '%', '<!--', '-'],
-    #     'source.python': ['#'],
-    #     'source.json.sublime.keymap': ['/']
-    # }
     SETTINGS = sublime.load_settings('comment_marks.sublime-settings')
-    # print(SETTINGS)
+    # print('Comment Marks Settings -- ', SETTINGS.to_dict())
 
     SCOPE_COMMENT_CHARS = SETTINGS.get('scope_comment_chars')
 
@@ -29,13 +23,6 @@ def get_config():
         for scope, chars
         in SCOPE_COMMENT_CHARS.items()
     }
-
-    # should come from user settings
-    # CUSTOM_COMMENT_START_PATTERNS = {
-    #     # insert comment char     V----- here
-    #     # 'source.python': [r'^[ \t]*\#+', r'\#'],
-    #     # 'source.json.sublime.keymap': [r'^[ \t]*\/+']
-    # }
 
     CUSTOM_COMMENT_START_PATTERNS = SETTINGS.get('custom_comment_start_patterns')
 
@@ -51,24 +38,11 @@ def get_config():
 
     # > Level Characters
 
-    # DEFAULT_LEVEL_CHAR = r'>'
     DEFAULT_LEVEL_CHAR = SETTINGS.get('default_level_char')
-    # LEVEL_CHARS = {
-    #     'source.python': r'>'
-    # }
     LEVEL_CHARS = SETTINGS.get('level_chars')
 
-    # Format for substitution of level_chars
-    # LEVEL_CHAR_FORMAT_SUB = {
-    #     1: '',
-    #     2: '  - ',
-    #     3: '   -- ',
-    #     4: '    --',
-    #     5: '     --'
-    # }
     LEVEL_CHAR_FORMAT_SUB = SETTINGS.get('level_char_format_sub')
 
-    # replace str keys with integers
     LEVEL_CHAR_FORMAT_SUB = {
         int(n): sub
         for n, sub in LEVEL_CHAR_FORMAT_SUB.items()
@@ -104,8 +78,8 @@ def get_config():
     EXTRACTION_SEP = r'|:!:|'
 
 
-# def plugin_loaded():
-#     get_config()
+def plugin_loaded():
+    get_config()
 
 
 # > Goto Comment Command
@@ -113,7 +87,7 @@ def get_config():
 class GotoCommentCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
-        get_config()
+        # get_config()
 
         self._current_cursor_loc = self.view.sel()[0]
         # print('goto comment')
