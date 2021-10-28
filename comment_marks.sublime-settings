@@ -1,31 +1,51 @@
 {
-    // If going to have custom settings for a particular scope,
-    // that scope must have a parameter in scope_comment_chars,
-    // as all other settings flow from the scopes identified here.
-    // This is because all regex patterns are prepared on package load.
-    "scope_comment_chars": {
-        "default": ["#", "/", "/*", "%", "<!--", "-"],
-        "source.python": ["#"],
-        "source.json.sublime.keymap": ["/"]
-    },
-
-    "custom_comment_start_patterns": {
-        "source.python": ["^[ \t]*#+"]
-    },
-
+    // Character to use in comments for creating Comment Marks
     "default_level_char": ">",
 
     // Custom level char for specific scopes
-    // scope must be configured in scope_comment_chars above first
+    // scope must be configured in scope_comment_chars below to take effect
+    // To find the scope of a file, hit CTRL+SHIFT+P, and see top line, or
+    // in control panel, run `view.syntax().scope`
     "level_chars": {
         "source.python": ">"
     },
 
+    // Control the formatting of Comment Marks in the quick panel
+    // Numeric keys signify what level of Comment Mark the formatting applies to
+    // String value is what will replace the level_chars in the quick panel ...
+    // ... note the spaces which create indentation
     "level_char_format_sub": {
         "1": "",
         "2": "  - ",
         "3": "   -- ",
         "4": "    --",
         "5": "     --"
-    }
+    },
+
+    // If going to have custom settings for a particular scope,
+    // that scope must have a parameter in scope_comment_chars (below),
+    // as all other settings flow from the scopes identified here.
+    // This is because all regex patterns are prepared on package load.
+    // These comment characters are put together in a larger pattern that
+    // presumes these characters can occur 1 or more times (using `+`) ...
+    // ... see the `source.python` example in custom_comment_start_patterns
+    // below for what this pattern looks like for python.
+    // When a file's scope is not here, default characters are used instead
+    // where the first character/sequence found is used
+    // **WARNING** - If providing your own user parameters,
+    // to retain any of these default parameters, they must be copied/included
+    // in your user settings file.
+    "scope_comment_chars": {
+        "default": ["#", "/", "/*", "%", "<!--", "-"],
+        "source.python": ["#"],
+        "source.json.sublime.keymap": ["/"]
+    },
+
+    // Provide specific regex for detecting comments for specific scopes
+    // These patterns will override those automatically generated from
+    // the characters in scope_comment_chars
+    "custom_comment_start_patterns": {
+        "source.python": ["^[ \t]*#+"]
+    },
+
 }

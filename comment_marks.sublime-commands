@@ -1,6 +1,9 @@
 [
 
-	{"caption": "Goto Comment Mark", "command": "goto_comment"},
+	{
+		"caption": "Comment Marks: Goto Comment",
+		"command": "goto_comment"
+	},
 	{
 	    "caption": "Comment Marks: Settings",
 	    "command": "edit_settings",
