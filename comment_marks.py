@@ -5,7 +5,7 @@ import sublime
 import sublime_plugin
 
 
-# > Comment start
+# > Config and Settings
 
 def get_config():
     "Extract settings and construct all relevant parameters and declar necessary global constants"
@@ -78,6 +78,7 @@ def get_config():
     EXTRACTION_SEP = r'|:!:|'
 
 
+# >> Load config when plugin loaded
 def plugin_loaded():
     get_config()
 
