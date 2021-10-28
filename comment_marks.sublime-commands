@@ -1,11 +1,14 @@
 [
 
-	{"caption": "Goto Comment Mark", "command": "goto_comment"},
+	{
+		"caption": "Comment Marks: Goto Comment",
+		"command": "goto_comment"
+	},
 	{
 	    "caption": "Comment Marks: Settings",
 	    "command": "edit_settings",
 	    "args": {
-	        "base_file": "${packages}/comment_marks/comment_marks.sublime-settings",
+	        "base_file": "${packages}/Comment Marks/comment_marks.sublime-settings",
 	        "default": "{\n$0\n}\n"
 	    }
 	},
