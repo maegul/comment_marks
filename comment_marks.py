@@ -169,11 +169,38 @@ class GotoCommentCommand(sublime_plugin.TextCommand):
             region.begin(), show_surrounds=True, keep_to_left=True, animate=False)
         # self.view.run_command('goto_line', {'line': self.view.line(region.begin())})
 
+    def region_line_start(self, region):
+        return self.view.line(region.begin()).a
+
+    def nearest_section_idx(self, sections):
+        view = self.view
+
+        sections_above = []  # want a section above cursor
+        for i, section in enumerate(sections):
+            distance = self.region_line_start(section[0]) - self.region_line_start(self._current_cursor_loc)
+            if distance <= 0:
+                sections_above.append((i, distance))
+            else:
+                # positive distance means past current cursor
+                break
+
+        if not sections_above:
+            return None
+        else:
+            return max(sections_above, key=lambda sa: sa[1])[0]
+
     def panel(self, sections):
 
-        goto_callback = partial(self.goto_section, sections)
         window = sublime.active_window()
+
+        nearest_idx = self.nearest_section_idx(sections['sections'])
+        initial_sel_idx = nearest_idx if nearest_idx else 0
+        # print(initial_sel_idx)
+        # print(self._current_cursor_loc, [r[0].begin() for r in sections['sections']])
+
+        goto_callback = partial(self.goto_section, sections)
         window.show_quick_panel(
             sections['formatted_matches'],
+            selected_index=initial_sel_idx,
             on_select=goto_callback, on_highlight=goto_callback
             )
