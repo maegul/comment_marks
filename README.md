@@ -40,13 +40,16 @@ The number of `>` characters defines what level the section has much like hashes
 ## Usage
 
 * **Command Palette**: `Goto Comment Mark`
-* No **Key binding** set, but go to `Preferences` > `Package Settings` > `Comment Marks` > `Key Bindings`
-	* You will see examples on the right and your user key bindings configuration file on the right.  Feel free to copy-paste across.
+* No **Key binding** is set by default. 
+    * To set user key bindings, go to the `Sublime Text` menu, then `Preferences` > `Package Settings` > `Comment Marks` > `Key Bindings`
+	* You will see examples on the left and your user key bindings configuration file on the right.  Feel free to copy-paste across.
 
 
 ## Design
 
-* Provide an approach to creating, searching and navigating to arbitrary bookmarks in a file.
+Aims:
+
+* Provide a simple but effective and flexible approach to creating, searching and navigating to arbitrary "bookmarks" in a file.
 * Make the process easy, lightweight and essentially editor independent.
 * Use a plugin that is simple but configurable and _hopefully_ performant.
 
@@ -58,16 +61,18 @@ This plugin is similar to `Table of comments` ([see Page on Package Control](htt
 	- Uses `python 3.8`, and is therefore compatible only with `Sublime Text v4`
 * More configurable (_I think_)
 * Faster (_in my experience_)
-	- Specifically, I'm referring to the time from running the `Goto Comment Mark` and seeing the quick panel (and the equivalent in `Table of comments`).
+	- Specifically, I'm referring to the time from running the `Goto Comment Mark` command and seeing the quick panel of "bookmarks" (and the equivalent in `Table of comments`).
 	- If this plugin is faster, it's probably due to these reasons:
-		+ regex paterns are prepared on plugin load not when the commands are run
-		+ plugin is minimal
-		+ uses `python 3.8` (??).
+		+ regex paterns are prepared on plugin load, not when the commands are run
+		+ plugin is relatively minimal
+		+ uses `python 3.8` and `f-strings`, which may provide noticeable performance gains.
 
 
 ## Configuration
 
 * Goto `Preferences` > `Package Settings` > `Comment Marks` > `Settings`, which will open the default settings on the left your custom settings on the right.
+
+_Current default settings:_
 
 ```javascript
 {
