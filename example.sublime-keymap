@@ -1,3 +1,8 @@
+// This is not an active keybinding ... it is just a suggestion :)
+// To have an active keybinding like this, copy-paste or type the example below
+// into your user keymap file
+// (which should be on the right if you've access this through the menu)
+// Note: only the code between and including the braces (curly brackets) needs to copied over
 [
 	{
 		"command": "goto_comment",
