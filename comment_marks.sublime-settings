@@ -41,6 +41,12 @@
         "source.json.sublime.keymap": ["/"]
     },
 
+    // For filtering it trailing comment characters (such as */ in CSS)
+    "scope_comment_trailing_chars": {
+        "default": ["*/", "-->"],
+        "source.css": ["*/"]
+    },
+
     // Provide specific regex for detecting comments for specific scopes
     // These patterns will override those automatically generated from
     // the characters in scope_comment_chars

@@ -17,7 +17,10 @@ def get_config():
 
     COMMENT_START_PATTERNS = {
         scope: [
-            rf'^[ \t]*{re.escape(c)}+'
+            # allow duplicates of last character only
+            # relies on python trick where slicing beyond len of string/list
+            # is ok ... just empty string/list returned
+            rf'^[ \t]*{re.escape(c[0])}{re.escape(c[1:])}+'
             for c in chars
             ]
         for scope, chars
@@ -34,6 +37,38 @@ def get_config():
         scope: r'|'.join([p for p in patterns ])
         for scope, patterns
         in COMMENT_START_PATTERNS.items()
+    }
+
+    # >> Trailing Characters
+    SCOPE_COMMENT_TRAILING_CHARS = SETTINGS.get('scope_comment_trailing_chars')
+    COMMENT_TRAILING_PATTERNS = {
+        scope: [
+            # big choice here!  Only duplicates of the first character are allowed
+            # seems to be the common behaviour, but by no means for certain
+            # >>> !! NEED TO ALLOW USER DEFINED CUSTOM TRAILING PATTERN
+            rf' *{re.escape(c[0])}+{re.escape(c[1:])} *$'
+            for c in chars
+        ]
+        for scope, chars
+        in SCOPE_COMMENT_TRAILING_CHARS.items()
+    }
+
+    global TRAILING_PATTERNS
+    TRAILING_PATTERNS = {
+        # 1 lazily capture whole comment mark as much as possible.
+        #   using wildcard allows whole comment mark to be captured
+        #   when no trailing comment characters are present at the end.
+        #   laziness necesary to separate the two groups though!!!
+        # 2 alternative tails for when multiple defined in settings
+        # 3 NULL alternative, works with lazy wild card at start
+        #   and is pivotal ... allows for no trailing comment chars
+        #   by allowing the wild card to capture the whole string
+        #   with the second group matching nothing by the end
+        #   of the string.  POTENTIALLY DANGEROUS AND BAD??
+        #           1     2                               3
+        scope: rf"(.*?)({'|'.join([p for p in patterns])}|$)"
+        for scope, patterns
+        in COMMENT_TRAILING_PATTERNS.items()
     }
 
     # > Level Characters
@@ -64,6 +99,7 @@ def get_config():
         scope: (
             # parentheses around pattern important, breaks | off from rest of pattern
             # ie, OR is not greedy
+            # > !!! Match for trailing here??
             rf'({pattern})[ ]*({re.escape(LEVEL_CHARS.get(scope, DEFAULT_LEVEL_CHAR))}+)\s*(.+)'
             )
         for scope, pattern
@@ -72,6 +108,9 @@ def get_config():
 
     print('Comment Marks -- Full Patterns Spec:')
     for scope, pattern in LEVEL_PATTERNS.items():
+        print(f'\t{scope}: {pattern}')
+    print('Trailing patterns:')
+    for scope, pattern in TRAILING_PATTERNS.items():
         print(f'\t{scope}: {pattern}')
 
     global EXTRACTION_SEP
@@ -134,12 +173,30 @@ class GotoCommentCommand(sublime_plugin.TextCommand):
             # as it means that scope is available in level_chars
             format_sub_patterns = LEVEL_CHAR_FORMAT_SUB_PATTERNS[scope]
 
+            # available scopes might differ between trailing and comment
+            # check and take default as fall back
+            if scope in TRAILING_PATTERNS:
+                trailing_pattern = TRAILING_PATTERNS[scope]
+            else:
+                trailing_pattern = TRAILING_PATTERNS['default']
+
+            trailing_re = re.compile(trailing_pattern)
+
             formatted_matches = []
             for section in sections['sections']:
                 match = section[1]
                 lvl, section_text = match.split(EXTRACTION_SEP)
-                # print(match, lvl, section_text)
-                formatted_match = f'{format_sub_patterns.get(lvl, lvl)}{section_text}'
+
+                # >> strip trailing chars
+                stripped_section_match = trailing_re.match(section_text)
+                # if no match, fallback to just the original section text
+                if stripped_section_match:
+                    stripped_section_text = stripped_section_match.group(1)
+                else:
+                    stripped_section_text = section_text
+
+                # print(match, lvl, section_text, stripped_section_text, stripped_section_match)
+                formatted_match = f'{format_sub_patterns.get(lvl, lvl)}{stripped_section_text}'
                 formatted_matches.append(formatted_match)
         else:  # just concretise the generator and extract the matches
             formatted_matches = [
