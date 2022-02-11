@@ -12,5 +12,9 @@
 	        "default": "{\n$0\n}\n"
 	    }
 	},
+	{
+		"caption": "Comment Marks: Reload Settings",
+		"command": "reload_comment_mark_settings"
+	}
 
 ]

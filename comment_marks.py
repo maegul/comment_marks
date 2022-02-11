@@ -4,16 +4,19 @@ from functools import partial
 import sublime
 import sublime_plugin
 
+SETTINGS_NAME = 'comment_marks.sublime-settings'
 
 # > Config and Settings
 
 def get_config():
     "Extract settings and construct all relevant parameters and declar necessary global constants"
 
-    SETTINGS = sublime.load_settings('comment_marks.sublime-settings')
+    SETTINGS = sublime.load_settings(SETTINGS_NAME)
     # print('Comment Marks Settings -- ', SETTINGS.to_dict())
 
-    SCOPE_COMMENT_CHARS = SETTINGS.get('scope_comment_chars')
+    SCOPE_COMMENT_CHARS = SETTINGS.get('scope_comment_chars', {})
+    # take default from settings
+    SCOPE_COMMENT_CHARS['default'] = SETTINGS.get('default_scope_comment_chars')
 
     COMMENT_START_PATTERNS = {
         scope: [
@@ -30,6 +33,7 @@ def get_config():
     CUSTOM_COMMENT_START_PATTERNS = SETTINGS.get('custom_comment_start_patterns')
 
     # add custom to all
+    # >> !! How deal with escape characters!
     COMMENT_START_PATTERNS.update(CUSTOM_COMMENT_START_PATTERNS)
 
     # > Compiling into complete patterns
@@ -40,7 +44,8 @@ def get_config():
     }
 
     # >> Trailing Characters
-    SCOPE_COMMENT_TRAILING_CHARS = SETTINGS.get('scope_comment_trailing_chars')
+    SCOPE_COMMENT_TRAILING_CHARS = SETTINGS.get('scope_comment_trailing_chars', {})
+    SCOPE_COMMENT_TRAILING_CHARS['default'] = SETTINGS.get('default_scope_comment_trailing_chars')
     COMMENT_TRAILING_PATTERNS = {
         scope: [
             # big choice here!  Only duplicates of the first character are allowed
@@ -73,11 +78,13 @@ def get_config():
 
     # > Level Characters
 
+    LEVEL_CHARS = SETTINGS.get('level_chars', {})
     DEFAULT_LEVEL_CHAR = SETTINGS.get('default_level_char')
-    LEVEL_CHARS = SETTINGS.get('level_chars')
+    LEVEL_CHARS['default'] = DEFAULT_LEVEL_CHAR
 
     LEVEL_CHAR_FORMAT_SUB = SETTINGS.get('level_char_format_sub')
 
+    # convert string "1", "2", ... to integers (sigh)
     LEVEL_CHAR_FORMAT_SUB = {
         int(n): sub
         for n, sub in LEVEL_CHAR_FORMAT_SUB.items()
@@ -87,24 +94,53 @@ def get_config():
     LEVEL_CHAR_FORMAT_SUB_PATTERNS = {
         scope: {
             # default back to default lvl char, so long as comment_start_pattern is set
-            (n*LEVEL_CHARS.get(scope, DEFAULT_LEVEL_CHAR)): sub
+            (n*level_char): sub
             for n, sub in LEVEL_CHAR_FORMAT_SUB.items()
         }
-        for scope in COMMENT_START_PATTERNS
+        for scope, level_char in LEVEL_CHARS.items()
     }
+    # LEVEL_CHAR_FORMAT_SUB_PATTERNS = {
+    #     scope: {
+    #         # default back to default lvl char, so long as comment_start_pattern is set
+    #         (n*LEVEL_CHARS.get(scope, DEFAULT_LEVEL_CHAR)): sub
+    #         for n, sub in LEVEL_CHAR_FORMAT_SUB.items()
+    #     }
+    #     for scope in COMMENT_START_PATTERNS
+    # }
 
     # > Full Patterns
+
+    # all specific scopes in level_chars and comment_chars
+    # so that any specification gets represented here, even if not defined
+    # in both level_chars and comment_chars.
+    # When not defined forboth, fallback to default
+    # this means scope specific level_chars and comment_chars are work
+    # independently of each other
+    all_scopes = set().union(COMMENT_PATTERNS, LEVEL_CHARS)
+    # prepare defaults
+    default_comment_pattern = COMMENT_PATTERNS['default']
+    default_level_char = LEVEL_CHARS['default']
+
     global LEVEL_PATTERNS
     LEVEL_PATTERNS = {
         scope: (
             # parentheses around pattern important, breaks | off from rest of pattern
             # ie, OR is not greedy
-            # > !!! Match for trailing here??
-            rf'({pattern})[ ]*({re.escape(LEVEL_CHARS.get(scope, DEFAULT_LEVEL_CHAR))}+)\s*(.+)'
+            rf'({COMMENT_PATTERNS.get(scope, default_comment_pattern)})[ ]*({re.escape(LEVEL_CHARS.get(scope, default_level_char))}+)\s*(.+)'
             )
-        for scope, pattern
-        in COMMENT_PATTERNS.items()
+        for scope
+        in all_scopes
     }
+    # LEVEL_PATTERNS = {
+    #     scope: (
+    #         # parentheses around pattern important, breaks | off from rest of pattern
+    #         # ie, OR is not greedy
+    #         # > !!! Match for trailing here??
+    #         rf'({pattern})[ ]*({re.escape(LEVEL_CHARS.get(scope, DEFAULT_LEVEL_CHAR))}+)\s*(.+)'
+    #         )
+    #     for scope, pattern
+    #     in COMMENT_PATTERNS.items()
+    # }
 
     print('Comment Marks -- Full Patterns Spec:')
     for scope, pattern in LEVEL_PATTERNS.items():
@@ -112,6 +148,9 @@ def get_config():
     print('Trailing patterns:')
     for scope, pattern in TRAILING_PATTERNS.items():
         print(f'\t{scope}: {pattern}')
+    print('Level characters and list formatting')
+    for scope, subs in LEVEL_CHAR_FORMAT_SUB_PATTERNS.items():
+        print(scope, subs)
 
     global EXTRACTION_SEP
     EXTRACTION_SEP = r'|:!:|'
@@ -121,6 +160,10 @@ def get_config():
 def plugin_loaded():
     get_config()
 
+class ReloadCommentMarkSettingsCommand(sublime_plugin.TextCommand):
+
+    def run(self, edit):
+        get_config()
 
 # > Goto Comment Command
 
@@ -193,7 +236,7 @@ class GotoCommentCommand(sublime_plugin.TextCommand):
     def strip_trailing_chars(self):
 
         strip_trailing_chars = (
-            sublime.load_settings('comment_marks.sublime-settings')
+            sublime.load_settings(SETTINGS_NAME)
             .get('trim_trailing_comment_chars', True)
             )
 
@@ -205,7 +248,10 @@ class GotoCommentCommand(sublime_plugin.TextCommand):
             scope = sections['scope']
             # should be available by this point,
             # as it means that scope is available in level_chars
-            format_sub_patterns = LEVEL_CHAR_FORMAT_SUB_PATTERNS[scope]
+            if scope in LEVEL_CHAR_FORMAT_SUB_PATTERNS:
+                format_sub_patterns = LEVEL_CHAR_FORMAT_SUB_PATTERNS[scope]
+            else:
+                format_sub_patterns = LEVEL_CHAR_FORMAT_SUB_PATTERNS['default']
 
             # check if stripping trailing chars
             # code split like this so that only checking once not within the for-loop
@@ -223,11 +269,13 @@ class GotoCommentCommand(sublime_plugin.TextCommand):
                 formatted_matches = []
                 for section in sections['sections']:
                     lvl, section_text = self.get_lvl_match(section)
-                    stripped_section_text = self.strip_trailing_comments(section_text, trailing_re)
+                    stripped_section_text = self.strip_trailing_comments(
+                        section_text, trailing_re)
                     # print(match, lvl, section_text, stripped_section_text, stripped_section_match)
                     formatted_match = self.format_match_for_list(
                         format_sub_patterns, lvl, stripped_section_text)
                     formatted_matches.append(formatted_match)
+            # if not stripping trailing characters
             # basically like above but no stripping trailing chars
             else:
                 formatted_matches = []
