@@ -160,10 +160,44 @@ class GotoCommentCommand(sublime_plugin.TextCommand):
             'scope': scope,
             # why note just concretise here!?
             # use python3 they said ... everything's a generator they said!
+            # >> !! Should probably be a list of dictionaries rather than tuples for semantic access
             'sections': list(zip(section_regions, section_matches))
         }
 
         return sections
+
+    def get_lvl_match(self, section):
+        match = section[1]  # index 1 as each section is [(REGION, MATCHED_TEXT)]
+        lvl, section_text = match.split(EXTRACTION_SEP)
+
+        return lvl, section_text
+
+    def strip_trailing_comments(self, section_text, trailing_re):
+
+        # >> strip trailing chars
+        stripped_section_match = trailing_re.match(section_text)
+        # if no match, fallback to just the original section text
+        if stripped_section_match:
+            stripped_section_text = stripped_section_match.group(1)
+        else:
+            stripped_section_text = section_text
+
+        return stripped_section_text
+
+    def format_match_for_list(self, format_sub_patterns, lvl, text):
+
+        formatted_match = f'{format_sub_patterns.get(lvl, lvl)}{text}'
+
+        return formatted_match
+
+    def strip_trailing_chars(self):
+
+        strip_trailing_chars = (
+            sublime.load_settings('comment_marks.sublime-settings')
+            .get('trim_trailing_comment_chars', True)
+            )
+
+        return strip_trailing_chars
 
     def update_with_formatted_matches(self, sections):
 
@@ -173,31 +207,37 @@ class GotoCommentCommand(sublime_plugin.TextCommand):
             # as it means that scope is available in level_chars
             format_sub_patterns = LEVEL_CHAR_FORMAT_SUB_PATTERNS[scope]
 
-            # available scopes might differ between trailing and comment
-            # check and take default as fall back
-            if scope in TRAILING_PATTERNS:
-                trailing_pattern = TRAILING_PATTERNS[scope]
-            else:
-                trailing_pattern = TRAILING_PATTERNS['default']
-
-            trailing_re = re.compile(trailing_pattern)
-
-            formatted_matches = []
-            for section in sections['sections']:
-                match = section[1]
-                lvl, section_text = match.split(EXTRACTION_SEP)
-
-                # >> strip trailing chars
-                stripped_section_match = trailing_re.match(section_text)
-                # if no match, fallback to just the original section text
-                if stripped_section_match:
-                    stripped_section_text = stripped_section_match.group(1)
+            # check if stripping trailing chars
+            # code split like this so that only checking once not within the for-loop
+            strip_trailing_chars = self.strip_trailing_chars()
+            if strip_trailing_chars:
+                # available scopes might differ between trailing and comment
+                # check and take default as fall back
+                if scope in TRAILING_PATTERNS:
+                    trailing_pattern = TRAILING_PATTERNS[scope]
                 else:
-                    stripped_section_text = section_text
+                    trailing_pattern = TRAILING_PATTERNS['default']
 
-                # print(match, lvl, section_text, stripped_section_text, stripped_section_match)
-                formatted_match = f'{format_sub_patterns.get(lvl, lvl)}{stripped_section_text}'
-                formatted_matches.append(formatted_match)
+                trailing_re = re.compile(trailing_pattern)
+
+                formatted_matches = []
+                for section in sections['sections']:
+                    lvl, section_text = self.get_lvl_match(section)
+                    stripped_section_text = self.strip_trailing_comments(section_text, trailing_re)
+                    # print(match, lvl, section_text, stripped_section_text, stripped_section_match)
+                    formatted_match = self.format_match_for_list(
+                        format_sub_patterns, lvl, stripped_section_text)
+                    formatted_matches.append(formatted_match)
+            # basically like above but no stripping trailing chars
+            else:
+                formatted_matches = []
+                for section in sections['sections']:
+                    lvl, section_text = self.get_lvl_match(section)
+                    # print(match, lvl, section_text, stripped_section_text, stripped_section_match)
+                    formatted_match = self.format_match_for_list(
+                        format_sub_patterns, lvl, section_text)
+                    formatted_matches.append(formatted_match)
+
         else:  # just concretise the generator and extract the matches
             formatted_matches = [
                 section[1]

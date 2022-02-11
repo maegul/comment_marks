@@ -41,7 +41,11 @@
         "source.json.sublime.keymap": ["/"]
     },
 
-    // For filtering it trailing comment characters (such as */ in CSS)
+    // Whether to trim the trailing characters of a comment (such as */ in CSS)
+    // Default is true, but if there are problems with this, the user can turn it off
+    "trim_trailing_comment_chars": true,
+
+    // For filtering out trailing comment characters (such as */ in CSS)
     "scope_comment_trailing_chars": {
         "default": ["*/", "-->"],
         "source.css": ["*/"]
