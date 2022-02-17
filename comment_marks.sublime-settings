@@ -1,56 +1,62 @@
 {
     // Restarting Sublime will probably be necessary for settings to take effect
-    // The command "Comment Marks: Reload Settings" should apply any changes to the settings.
-    // If not, restarting should a more reliable means of doing so.
+    // The command "Comment Marks: Reload Settings" (run from the command palette)
+    // should apply any changes to the settings without needing to restart.
+    // If that does not work, restarting will be a more reliable means of doing so.
 
-    // > ... there are Comment Marks in here :)
+    // > look ... there are Comment Marks in here :)
 
     // > Basic Visual Settings
 
     // Character to use in comments for creating Comment Marks
-    // Use repeats this character to create Comment Marks of "lower levels"
+    // Use repeats of this character to create Comment Marks of increasingly "lower levels"
     // like in markdown
     "default_level_char": ">",
 
     // Control the formatting of Comment Marks in the Command Palette
     // Numeric keys signify what level of Comment Mark the formatting applies to, or
-    // more specifically, the number of "default_level_char" characters that have been repeated.
-    // String value is what will replace the level_chars in the quick panel ...
-    // ... note the spaces which create indentation
+    // more specifically, the number of "default_level_char" characters
+    // that have been repeated.
+    // The string value is what will replace the level_chars in the quick panel ...
+    // ... note the spaces which create indentation in the Command Palette.
     "level_char_format_sub": {
         "1": "",
         "2": "  - ",
         "3": "   -- ",
         "4": "    -- ",
-        "5": "     -- "
+        "5": "     -- ",
+        "6": "      -- ",
     },
 
     // >> Scope specific comment mark character (like level_char above)
 
     // Custom level char for specific scopes, if you want to use a different
-    // character in a particular scope (so it looks better or clearer, for instance).
-    // To find the scope of a file, hit CTRL+SHIFT+P, and see top line, or
+    // character in particular scopes (so it looks better or clearer, for instance).
+    // To find the scope of a file, hit CTRL+SHIFT+P, and see the top line, or
     // in control panel, run `view.syntax().scope`
     "level_chars": {
         // "source.python": ">",
         // "source.c": ">"
     },
 
-    // >> Trimming trailing comments (eg CSS, HTML, C)
+    // >> Trimming trailing comments (for languages like CSS, HTML, C)
 
     // Whether to trim the trailing characters of a comment (such as */ in CSS)
-    // Default is true, but if there are problems with this, the user can turn it off
+    // Default is false, as somewhat experimental.
+    // Feel tree to turn on, but if there are problems with this, you can turn it off
     "trim_trailing_comment_chars": true,
 
-    // For filtering out trailing comment characters (such as */ in CSS)
+    // What trailing characters to trim for specific scopes/syntaxes (such as */ in CSS).
     // These are searched for at the end of every comment mark and stripped if found.
-    // Default characters are defined below, but if a specific syntax isn't covered by them.
-    // You can provide the specific trailing characters below for the specific syntax/scope.
+    // Default characters are defined in another setting below.
+    // SO YOU DO NOT NEED TO TOUCH THIS SETTING.
+    // But if a specific syntax isn't covered by the default settings,
+    // you can provide the specific trailing characters below for the specific syntax/scope.
     // To find the scope of a file, hit CTRL+SHIFT+P, and see the top line, or
     // in the control panel, run `view.syntax().scope`.
-    // You must provide a list, even if providing only a single string.
+    // You must provide a list of strings, even if providing only a single string.
     "scope_comment_trailing_chars": {
-        "source.css": ["*/"]
+        // "source.css": ["*/"]
     },
 
     // Default characters used as a fallback when no scope-specific characters
@@ -59,14 +65,16 @@
     // Relying on these is the intended behavour, YOU DO NOT NEED TO PROVIDE
     // SCOPE-SPECIFIC CHARACTERS ABOVE.
     // Feel free to adjust or augment this list as you see fit, though you
-    // might alter the behaviour of the plugin.
+    // might alter the behaviour of the plugin by doing so.
     // Must provide a list of strings, even if only one string.
     "default_scope_comment_trailing_chars": ["*/", "-->"],
 
 
     // > Customising the detection of comments
 
-    // The finds Comment Marks as follows:
+    // >> Introduction (rant)
+
+    // The plubin finds Comment Marks as follows:
         // 1. Uses regex patterns that ...
         // 2. Search for lines that start with some combination of whitespace and comment
         //      characters
@@ -78,12 +86,14 @@
     // default settings define multiple comment characters which are searched as alternatives.
     // This works well most of the time, but maybe something is off for a particular syntax
     // or you use it in a particular way.
-    // The settings below allow you to manipulate what characters are searched for within files
-    // of a particular syntax/scope.
-    // These characters will then be placed into a larger regex pattern (to take care of whitespace)
-    // etc.  If you want, with "custom_comment_start_patterns", you can set the full regex for
-    // what defines a comment line in a particular syntax/scope, where the plugin will add the rest
-    // for searching for the comment marks etc.
+    // The settings below allow you to manipulate what characters are searched for
+    // within files of a particular syntax/scope.
+    // These characters will then be placed into a larger regex pattern
+    // (to take care of whitespace) etc.
+    // If you want, with "custom_comment_start_patterns", you can set the full regex for
+    // what defines a comment line in a particular syntax/scope,
+    // where the plugin will add the rest of the needed regex
+    // for searching for the headings of the comment marks and the level characters (">") etc.
 
     // >> Defining comment characters
 
@@ -105,7 +115,7 @@
     // Default characters used as the fallback when no scope-specific characters
     // are defined above.
     // There is no need to specify scope-specific characters, relying on these
-    // default characters is the intended functionality.
+    // default characters is the intended functionality of the plugin.
     // You really shouldn't need to alter these, but just in case, you can.
     // Doing so may break the plugin though!
     // Must provide a list of strings, even if only one string.
@@ -115,16 +125,26 @@
     // >> Comment regex pattern override
 
     // Provide specific regex patterns for detecting comments for specific scopes.
-    // REQUITES KNOWING REGEX.
+    // REQUIRES KNOWING REGEX.
     // These patterns will COMPLETELY OVERRIDE those automatically generated from
     // the characters in scope_comment_chars.
     // This setting is available if it's necessary to rectify the default behaviour
     // either because of a bug, a special need, or a syntax that has not been accounted for.
     // Also, it will result in a simpler regex pattern for any scope provided for, which
-    // could be somewhat more performant (though not noticeably).
+    // could be somewhat more performant (though probably not noticeably).
     // A valid example for python is provided for demonstration.
     // Must provide a list of strings, even if only one string.
-    // WARNING ... escape characters are not (yet) taken as raw strings here.
+
+    // WARNING ... these patterns are not interpretted as python raw strings, so to use the
+    // the backslash character ("\") in regex, you'll have to escape it with the python
+    // escape character, which is the same ("\").
+    // EG, to match an asterisk with regex requires escaping it ("\*") as the asterisk
+    // is an operator in regex.  BUT, because python interprets the backslash as an escape
+    // character, it also needs to be escaped ("\\") resulting in "\\*" to match an asterisk.
+    // Absurdly, to match a backslash in regex requires "\\", ie an escaped escape chararacter,
+    // and to do it here with a python string requires escaping both of those backslashes,
+    // ie "\\\\".
+
     "custom_comment_start_patterns": {
         "source.python": ["^[ \t]*#+"]
     },

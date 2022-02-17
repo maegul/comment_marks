@@ -31,9 +31,11 @@ def get_config():
     }
 
     CUSTOM_COMMENT_START_PATTERNS = SETTINGS.get('custom_comment_start_patterns')
+    print('custom start patterns', CUSTOM_COMMENT_START_PATTERNS)
 
     # add custom to all
     # >> !! How deal with escape characters!
+    # Rely on user using escaping backslashes (eg, "\\*" instead of "\*")
     COMMENT_START_PATTERNS.update(CUSTOM_COMMENT_START_PATTERNS)
 
     # > Compiling into complete patterns
@@ -44,13 +46,20 @@ def get_config():
     }
 
     # >> Trailing Characters
+
     SCOPE_COMMENT_TRAILING_CHARS = SETTINGS.get('scope_comment_trailing_chars', {})
     SCOPE_COMMENT_TRAILING_CHARS['default'] = SETTINGS.get('default_scope_comment_trailing_chars')
     COMMENT_TRAILING_PATTERNS = {
         scope: [
+            # Add whitespace, end of line and "+" operator to trailing chars
             # big choice here!  Only duplicates of the first character are allowed
             # seems to be the common behaviour, but by no means for certain
             # >>> !! NEED TO ALLOW USER DEFINED CUSTOM TRAILING PATTERN
+            # 1 leading spaces before trailing comment characters
+            # 2 at least one, but also multiple of the first character
+            # 3 the rest of the characters, if any, and just once
+            # 4 trailing spaces up to the end of the line
+            #  1  ------ 2 ------          3         4
             rf' *{re.escape(c[0])}+{re.escape(c[1:])} *$'
             for c in chars
         ]
@@ -142,6 +151,7 @@ def get_config():
     #     in COMMENT_PATTERNS.items()
     # }
 
+    # >> Print out to console
     print('Comment Marks -- Full Patterns Spec:')
     for scope, pattern in LEVEL_PATTERNS.items():
         print(f'\t{scope}: {pattern}')
