@@ -44,7 +44,7 @@
     // Whether to trim the trailing characters of a comment (such as */ in CSS)
     // Default is false, as somewhat experimental.
     // Feel tree to turn on, but if there are problems with this, you can turn it off
-    "trim_trailing_comment_chars": true,
+    "trim_trailing_comment_chars": false,
 
     // What trailing characters to trim for specific scopes/syntaxes (such as */ in CSS).
     // These are searched for at the end of every comment mark and stripped if found.
@@ -62,7 +62,7 @@
     // Default characters used as a fallback when no scope-specific characters
     // are defined above.
     // Each one is searched, one after the other, using a regex OR operator ("|")
-    // Relying on these is the intended behavour, YOU DO NOT NEED TO PROVIDE
+    // Relying on these is the intended behaviour, YOU DO NOT NEED TO PROVIDE
     // SCOPE-SPECIFIC CHARACTERS ABOVE.
     // Feel free to adjust or augment this list as you see fit, though you
     // might alter the behaviour of the plugin by doing so.
