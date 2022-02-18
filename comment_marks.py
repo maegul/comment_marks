@@ -31,7 +31,7 @@ def get_config():
     }
 
     CUSTOM_COMMENT_START_PATTERNS = SETTINGS.get('custom_comment_start_patterns')
-    print('custom start patterns', CUSTOM_COMMENT_START_PATTERNS)
+    # print('custom start patterns', CUSTOM_COMMENT_START_PATTERNS)
 
     # add custom to all
     # >> !! How deal with escape characters!
