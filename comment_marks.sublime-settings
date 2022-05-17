@@ -109,7 +109,9 @@
     // Must provide a list of strings, even if only one string.
     "scope_comment_chars": {
         "source.python": ["#"],
-        "source.json.sublime.keymap": ["/"]
+        "source.json.sublime.keymap": ["/"],
+        "source.neovintageousrc": ["\""],
+		"source.viml": ["\""]
     },
 
     // Default characters used as the fallback when no scope-specific characters
