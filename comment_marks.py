@@ -170,6 +170,29 @@ def get_config():
 def plugin_loaded():
     get_config()
 
+# >> Fix for find_all() API change
+
+# wrap find all and differ by version
+
+sublime_version = int(sublime.version())
+
+if sublime_version < 4133:
+    def find_all_wrap(view, pattern, fmt, extractions):
+        regions = view.find_all(
+            pattern,
+            fmt=fmt,  # older API
+            extractions=extractions)
+        return regions
+else:
+    def find_all_wrap(view, pattern, fmt, extractions):
+        regions = view.find_all(
+            pattern,
+            format=fmt,  # newer broken API
+            extractions=extractions)
+        return regions
+
+
+
 class ReloadCommentMarkSettingsCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
@@ -204,10 +227,15 @@ class GotoCommentCommand(sublime_plugin.TextCommand):
         # print(pattern)
 
         section_matches = []
-        section_regions = self.view.find_all(
-            pattern,
+        section_regions = find_all_wrap(
+            view=self.view,
+            pattern=pattern,
             fmt=rf'\2{EXTRACTION_SEP}\3',
             extractions=section_matches)
+        # section_regions = self.view.find_all(
+        #     pattern,
+        #     fmt=rf'\2{EXTRACTION_SEP}\3',
+        #     extractions=section_matches)
 
         sections = {
             'scope': scope,
